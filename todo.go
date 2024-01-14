@@ -4,9 +4,17 @@ import (
 	"bufio"
 	"encoding/json"
 	"fmt"
+	"github.com/fatih/color"
 	"log"
 	"os"
 	"strings"
+)
+
+var (
+	indexColor  = color.New(color.FgHiYellow).SprintfFunc()
+	titleColor  = color.New(color.FgCyan).SprintfFunc()
+	pendingColor = color.New(color.FgRed).SprintfFunc()
+	completedColor = color.New(color.FgGreen).SprintfFunc()
 )
 
 // TodoItem represents a single to-do item.
@@ -43,12 +51,18 @@ func (t *TodoList) LoadFromFile(filename string) error {
 
 // Print prints the to-do list in a human-readable format.
 func (t *TodoList) Print() {
-	for _, item := range *t {
-		status := "pending"
+	for index, item := range *t {
+		status := pendingColor("pending")
 		if item.Completed {
-			status = "completed"
+			status = completedColor("completed")
 		}
-		fmt.Printf("Title: %v - Status: %v\n", item.Title, status)
+		var emoji string
+		if index%2 == 0 {
+			emoji = "⚫️"
+		} else {
+			emoji = "⚪️"
+		}
+		fmt.Printf("%v %v. Title: %v - Status: %v\n", emoji, indexColor("%d", index+1), titleColor(item.Title), status)
 	}
 }
 
@@ -82,6 +96,7 @@ func (t *TodoList) finishAnItem() {
 	fmt.Printf("✅ Item %v has been completed\n", title)
 }
 
+// Delete the given Item by the user
 func (t *TodoList) deleteAnItem() {
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Print("Enter the title you want deleted: ")
@@ -100,6 +115,74 @@ func (t *TodoList) deleteAnItem() {
 	fmt.Printf("✅ Item %v has been deleted.\n", title)
 }
 
+// Edit an Item title
+func (t *TodoList) editAnItem() {
+	reader := bufio.NewReader(os.Stdin)
+	fmt.Print("Enter the title you want to edit: ")
+	title, _ := reader.ReadString('\n')
+	newTitle := title
+	title = strings.TrimSpace(title)
+	for index, item := range *t {
+		if item.Title == title {
+			fmt.Print("Enter the new title: ")
+			newTitle, _ = reader.ReadString('\n')
+			newTitle = strings.TrimSpace(newTitle)
+			(*t)[index].Title = newTitle
+			break
+		}
+		if index+1 == len(*t) && item.Title != title {
+			fmt.Printf("❌ Item %v Was Not Found.\n", title)
+			return
+		}
+	}
+	fmt.Printf("✅ Item %v has been edited ==> New Title: %v\n", title, newTitle)
+}
+
+// Show ToDo App Menu
+func (t *TodoList) menu() {
+	fmt.Println("\n📍📍📍 ToDo App 📍📍📍")
+	fmt.Println("1. Create new ToDo")
+	fmt.Println("2. Finish A ToDo")
+	fmt.Println("3. Edit A ToDo")
+	fmt.Println("4. Delete A ToDo")
+	fmt.Println("5. Save")
+	fmt.Println("6. Show My ToDo List")
+	fmt.Println("7. Exit")
+
+	reader := bufio.NewReader(os.Stdin)
+	fmt.Print("Enter your choice: ")
+	choice, _ := reader.ReadString('\n')
+	choice = strings.TrimSpace(choice)
+
+	switch choice {
+	case "1":
+		t.createNewToDo()
+	case "2":
+		t.finishAnItem()
+	case "3":
+		t.editAnItem()
+	case "4":
+		t.deleteAnItem()
+	case "5":
+		err := t.SaveToFile("todo.json")
+		if err != nil {
+			log.Println("Failed to save to-do list:", err)
+		} else {
+			fmt.Println("To-Do list saved.")
+		}
+	case "6":
+		t.Print()
+	case "7":
+		fmt.Println("👋 Bye Bye 👋")
+		os.Exit(0)
+	default:
+		fmt.Println("Invalid choice.")
+	}
+
+	// Recursively call the menu function to show the menu again
+	t.menu()
+}
+
 func main() {
 	// Initialize an empty TodoList
 	todoList := &TodoList{}
@@ -110,16 +193,5 @@ func main() {
 		log.Println("Failed to load to-do list:", err)
 	}
 
-	// todoList.createNewToDo()
-	// todoList.finishAnItem()
-	todoList.deleteAnItem()
-
-	// Save the updated list back to the file
-	err = todoList.SaveToFile("todo.json")
-	if err != nil {
-		log.Fatal("Failed to save to-do list:", err)
-	}
-
-	// Print the to-do list in JSON format
-	todoList.Print()
+	todoList.menu()
 }
