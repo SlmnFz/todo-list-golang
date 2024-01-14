@@ -52,7 +52,7 @@ func (t *TodoList) Print() {
 	}
 }
 
-// Create a new ToDo by getting user input
+// Create a new ToDo given by the user
 func (t *TodoList) createNewToDo() {
 	reader := bufio.NewReader(os.Stdin)
 	fmt.Print("Enter a title: ")
@@ -63,12 +63,20 @@ func (t *TodoList) createNewToDo() {
 	t.AddItem(newItem)
 }
 
-// Finish the given Item
-func (t *TodoList) finishAnItem(title string) {
+// Finish the given Item by the user
+func (t *TodoList) finishAnItem() {
+	reader := bufio.NewReader(os.Stdin)
+	fmt.Print("Enter the title you want completed: ")
+	title, _ := reader.ReadString('\n')
+	title = strings.TrimSpace(title)
 	for index, item := range *t {
 		if item.Title == title {
 			(*t)[index].Completed = true
 			break
+		}
+		if index+1 == len(*t) && item.Title != title {
+			fmt.Printf("❌ Item %v Was Not Found.\n", title)
+			return
 		}
 	}
 	err := t.SaveToFile("todo.json")
@@ -89,8 +97,8 @@ func main() {
 		log.Println("Failed to load to-do list:", err)
 	}
 
-	todoList.createNewToDo()
-	todoList.finishAnItem("new")
+	// todoList.createNewToDo()
+	todoList.finishAnItem()
 
 	// Save the updated list back to the file
 	err = todoList.SaveToFile("todo.json")
