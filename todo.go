@@ -5,20 +5,24 @@ import (
 	"encoding/json"
 	"fmt"
 	"github.com/fatih/color"
+	"github.com/google/uuid"
 	"log"
 	"os"
 	"strings"
 )
 
 var (
-	indexColor  = color.New(color.FgHiYellow).SprintfFunc()
-	titleColor  = color.New(color.FgCyan).SprintfFunc()
-	pendingColor = color.New(color.FgRed).SprintfFunc()
+	idColor        = color.New(color.FgBlue).SprintfFunc()
+	indexColor     = color.New(color.FgHiYellow).SprintfFunc()
+	titleColor     = color.New(color.FgCyan).SprintfFunc()
+	pendingColor   = color.New(color.FgMagenta).SprintfFunc()
 	completedColor = color.New(color.FgGreen).SprintfFunc()
+	errorColor     = color.New(color.FgRed).SprintFunc()
 )
 
 // TodoItem represents a single to-do item.
 type TodoItem struct {
+	Id        string `json:"id"`
 	Title     string `json:"title"`
 	Completed bool   `json:"completed"`
 }
@@ -62,7 +66,12 @@ func (t *TodoList) Print() {
 		} else {
 			emoji = "⚪️"
 		}
-		fmt.Printf("%v %v. Title: %v - Status: %v\n", emoji, indexColor("%d", index+1), titleColor(item.Title), status)
+		fmt.Printf("%v %v. ID: %v Title: %v Status: %v\n",
+			emoji,
+			indexColor("%d", index+1),
+			idColor(item.Id),
+			titleColor(item.Title),
+			status)
 	}
 }
 
@@ -73,7 +82,8 @@ func (t *TodoList) createNewToDo() {
 	title, _ := reader.ReadString('\n')
 	title = strings.TrimSpace(title)
 	fmt.Print("✅ New Item added to the list.\n")
-	newItem := TodoItem{Title: title, Completed: false}
+	id := strings.Split(uuid.NewString(), "-")[0]
+	newItem := TodoItem{Id: id, Title: title, Completed: false}
 	t.AddItem(newItem)
 }
 
@@ -89,7 +99,7 @@ func (t *TodoList) finishAnItem() {
 			break
 		}
 		if index+1 == len(*t) && item.Title != title {
-			fmt.Printf("❌ Item %v Was Not Found.\n", title)
+			fmt.Printf("❌ Item %v Was Not Found.\n", errorColor(title))
 			return
 		}
 	}
@@ -108,7 +118,7 @@ func (t *TodoList) deleteAnItem() {
 			break
 		}
 		if index+1 == len(*t) && item.Title != title {
-			fmt.Printf("❌ Item %v Was Not Found.\n", title)
+			fmt.Printf("❌ Item %v Was Not Found.\n", errorColor(title))
 			return
 		}
 	}
@@ -131,7 +141,7 @@ func (t *TodoList) editAnItem() {
 			break
 		}
 		if index+1 == len(*t) && item.Title != title {
-			fmt.Printf("❌ Item %v Was Not Found.\n", title)
+			fmt.Printf("❌ Item %v Was Not Found.\n", errorColor(title))
 			return
 		}
 	}
@@ -140,7 +150,7 @@ func (t *TodoList) editAnItem() {
 
 // Show ToDo App Menu
 func (t *TodoList) menu() {
-	fmt.Println("\n📍📍📍 ToDo App 📍📍📍")
+	fmt.Println("\n📔 ToDo App")
 	fmt.Println("1. Create new ToDo")
 	fmt.Println("2. Finish A ToDo")
 	fmt.Println("3. Edit A ToDo")
@@ -166,9 +176,9 @@ func (t *TodoList) menu() {
 	case "5":
 		err := t.SaveToFile("todo.json")
 		if err != nil {
-			log.Println("Failed to save to-do list:", err)
+			log.Println("Failed to save to-do list:", errorColor(err))
 		} else {
-			fmt.Println("To-Do list saved.")
+			fmt.Println(completedColor("To-Do list saved."))
 		}
 	case "6":
 		t.Print()
@@ -176,7 +186,7 @@ func (t *TodoList) menu() {
 		fmt.Println("👋 Bye Bye 👋")
 		os.Exit(0)
 	default:
-		fmt.Println("Invalid choice.")
+		fmt.Println(errorColor("Invalid choice."))
 	}
 
 	// Recursively call the menu function to show the menu again
@@ -190,7 +200,7 @@ func main() {
 	// Load existing items from the file
 	err := todoList.LoadFromFile("todo.json")
 	if err != nil {
-		log.Println("Failed to load to-do list:", err)
+		log.Println("Failed to load to-do list:", errorColor(err))
 	}
 
 	todoList.menu()
