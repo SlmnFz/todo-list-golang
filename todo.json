@@ -4,10 +4,6 @@
     "completed": false
   },
   {
-    "title": "new",
-    "completed": true
-  },
-  {
     "title": "Game of Thrones",
     "completed": false
   },
@@ -17,10 +13,6 @@
   },
   {
     "title": "Friends",
-    "completed": true
-  },
-  {
-    "title": "hehe",
     "completed": true
   }
 ]

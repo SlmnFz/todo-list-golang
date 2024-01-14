@@ -79,12 +79,25 @@ func (t *TodoList) finishAnItem() {
 			return
 		}
 	}
-	err := t.SaveToFile("todo.json")
-	if err != nil {
-		fmt.Printf("❗️ Error saving to file: %v\n", err)
-		return
-	}
 	fmt.Printf("✅ Item %v has been completed\n", title)
+}
+
+func (t *TodoList) deleteAnItem() {
+	reader := bufio.NewReader(os.Stdin)
+	fmt.Print("Enter the title you want deleted: ")
+	title, _ := reader.ReadString('\n')
+	title = strings.TrimSpace(title)
+	for index, item := range *t {
+		if item.Title == title {
+			*t = append((*t)[:index], (*t)[index+1:]...)
+			break
+		}
+		if index+1 == len(*t) && item.Title != title {
+			fmt.Printf("❌ Item %v Was Not Found.\n", title)
+			return
+		}
+	}
+	fmt.Printf("✅ Item %v has been deleted.\n", title)
 }
 
 func main() {
@@ -98,7 +111,8 @@ func main() {
 	}
 
 	// todoList.createNewToDo()
-	todoList.finishAnItem()
+	// todoList.finishAnItem()
+	todoList.deleteAnItem()
 
 	// Save the updated list back to the file
 	err = todoList.SaveToFile("todo.json")
