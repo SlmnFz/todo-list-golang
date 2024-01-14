@@ -1,10 +1,12 @@
 package main
 
 import (
+	"bufio"
 	"encoding/json"
 	"fmt"
 	"log"
 	"os"
+	"strings"
 )
 
 // TodoItem represents a single to-do item.
@@ -50,6 +52,33 @@ func (t *TodoList) Print() {
 	}
 }
 
+// Create a new ToDo by getting user input
+func (t *TodoList) createNewToDo() {
+	reader := bufio.NewReader(os.Stdin)
+	fmt.Print("Enter a title: ")
+	title, _ := reader.ReadString('\n')
+	title = strings.TrimSpace(title)
+	fmt.Print("✅ New Item added to the list.\n")
+	newItem := TodoItem{Title: title, Completed: false}
+	t.AddItem(newItem)
+}
+
+// Finish the given Item
+func (t *TodoList) finishAnItem(title string) {
+	for index, item := range *t {
+		if item.Title == title {
+			(*t)[index].Completed = true
+			break
+		}
+	}
+	err := t.SaveToFile("todo.json")
+	if err != nil {
+		fmt.Printf("❗️ Error saving to file: %v\n", err)
+		return
+	}
+	fmt.Printf("✅ Item %v has been completed\n", title)
+}
+
 func main() {
 	// Initialize an empty TodoList
 	todoList := &TodoList{}
@@ -60,9 +89,8 @@ func main() {
 		log.Println("Failed to load to-do list:", err)
 	}
 
-	// Example of adding a new item to the list
-	newItem := TodoItem{Title: "Learn Go v3", Completed: false}
-	todoList.AddItem(newItem)
+	todoList.createNewToDo()
+	todoList.finishAnItem("new")
 
 	// Save the updated list back to the file
 	err = todoList.SaveToFile("todo.json")

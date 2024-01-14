@@ -2,5 +2,25 @@
   {
     "title": "Learn Go",
     "completed": false
+  },
+  {
+    "title": "new",
+    "completed": true
+  },
+  {
+    "title": "Game of Thrones",
+    "completed": false
+  },
+  {
+    "title": "Friends with benefits",
+    "completed": false
+  },
+  {
+    "title": "Friends",
+    "completed": false
+  },
+  {
+    "title": "hehe",
+    "completed": false
   }
 ]
